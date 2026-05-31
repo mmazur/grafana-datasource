@@ -1,27 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PID_FILE="$HOME/grafana/grafana.pid"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PID_FILE="$SCRIPT_DIR/.var/grafana.pid"
+PORT=3000
 
-if [[ ! -f "$PID_FILE" ]]; then
-  echo "No PID file ($PID_FILE); Grafana not running via start.sh"
-  exit 0
-fi
-
-PID=$(cat "$PID_FILE")
-if kill -0 "$PID" 2>/dev/null; then
-  kill "$PID"
+stop_pid() {
+  local pid=$1
+  kill "$pid" 2>/dev/null || return 1
   for _ in $(seq 1 10); do
-    kill -0 "$PID" 2>/dev/null || break
+    kill -0 "$pid" 2>/dev/null || return 0
     sleep 1
   done
-  if kill -0 "$PID" 2>/dev/null; then
-    echo "Grafana (pid $PID) didn't stop; sending SIGKILL"
-    kill -9 "$PID" 2>/dev/null || true
-  fi
-  echo "Grafana stopped (pid $PID)"
-else
-  echo "Grafana not running (stale pid $PID)"
+  echo "Grafana (pid $pid) didn't stop; sending SIGKILL"
+  kill -9 "$pid" 2>/dev/null || true
+}
+
+stopped=false
+
+# Preferred: PID file written by start.sh
+if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+  PID=$(cat "$PID_FILE")
+  stop_pid "$PID" && echo "Grafana stopped (pid $PID)"
+  stopped=true
 fi
 
+# Fallback: a stale/missing PID file must not leave an orphan holding the port.
+# Match our own instance by its command line (homepath + our port).
+for pid in $(pgrep -f "grafana server .*http_port=$PORT" 2>/dev/null || true); do
+  stop_pid "$pid" && echo "Grafana stopped (orphan pid $pid, not in PID file)"
+  stopped=true
+done
+
+$stopped || echo "No Grafana on port $PORT to stop"
 rm -f "$PID_FILE"
