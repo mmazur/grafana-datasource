@@ -46,3 +46,8 @@ ci/
 .idea
 
 .eslintcache
+
+# Private datasource provisioning override
+datasources.yml
+docker-compose.override.yaml
+.var/
