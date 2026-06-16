@@ -2,15 +2,16 @@ package plugin
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
-func TestQueryData(t *testing.T) {
+func TestQueryDataWithoutInstanceSettings(t *testing.T) {
 	ds := Datasource{}
 
-	resp, err := ds.QueryData(
+	_, err := ds.QueryData(
 		context.Background(),
 		&backend.QueryDataRequest{
 			Queries: []backend.DataQuery{
@@ -18,11 +19,10 @@ func TestQueryData(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Fatal("expected QueryData to return an error")
 	}
-
-	if len(resp.Responses) != 1 {
-		t.Fatal("QueryData must return a response")
+	if !strings.Contains(err.Error(), "datasource instance settings are unavailable") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

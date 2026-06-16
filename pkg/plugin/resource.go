@@ -66,7 +66,7 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 	if err != nil {
 		return sendErr(sender, http.StatusBadGateway, fmt.Sprintf("upstream request: %v", err))
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -117,7 +117,9 @@ func (d *Datasource) doUpstreamResourceRequest(ctx context.Context, cfg *models.
 		return resp, nil
 	}
 
-	resp.Body.Close()
+	if err := resp.Body.Close(); err != nil {
+		return nil, fmt.Errorf("close unauthorized response body: %w", err)
+	}
 	d.clearCachedToken()
 	authHeader, err = d.buildAuthHeader(ctx, cfg)
 	if err != nil {
@@ -347,12 +349,13 @@ func (d *Datasource) queryUpstream(ctx context.Context, cfg *models.PluginSettin
 		logger.Error("Upstream request failed", "url", upstream+"/api/ds/query", "elapsed", elapsed, "error", err)
 		return nil, fmt.Errorf("upstream request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read upstream body: %w", err)
 	}
+
 	if resp.StatusCode/100 != 2 {
 		// The upstream may return 4xx/5xx with a valid QueryDataResponse body
 		// containing per-query errors (e.g. PromQL syntax errors return 400).
@@ -409,7 +412,9 @@ func (d *Datasource) doUpstreamQueryRequest(ctx context.Context, cfg *models.Plu
 		return resp, nil
 	}
 
-	resp.Body.Close()
+	if err := resp.Body.Close(); err != nil {
+		return nil, fmt.Errorf("close unauthorized response body: %w", err)
+	}
 	d.clearCachedToken()
 	authHeader, err = d.buildAuthHeader(ctx, cfg)
 	if err != nil {
@@ -422,6 +427,12 @@ func (d *Datasource) doUpstreamQueryRequest(ctx context.Context, cfg *models.Plu
 func setRaw(m map[string]json.RawMessage, key string, v any) {
 	if raw, err := json.Marshal(v); err == nil {
 		m[key] = raw
+	}
+}
+
+func closeResponseBody(body io.Closer) {
+	if err := body.Close(); err != nil {
+		log.DefaultLogger.Warn("Failed to close upstream response body", "error", err)
 	}
 }
 

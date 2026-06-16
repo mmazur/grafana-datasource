@@ -49,6 +49,10 @@ func (d *Datasource) Dispose() {
 // via the upstream Grafana's /api/ds/query, then decodes the columnar JSON
 // response (which is the data.Frame wire format) straight back into frames.
 func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+	if req == nil || req.PluginContext.DataSourceInstanceSettings == nil {
+		return nil, fmt.Errorf("datasource instance settings are unavailable")
+	}
+
 	cfg, err := models.LoadPluginSettings(*req.PluginContext.DataSourceInstanceSettings)
 	if err != nil {
 		return nil, fmt.Errorf("load settings: %w", err)
@@ -62,6 +66,12 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 // a datasource is working as expected.
 func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	res := &backend.CheckHealthResult{}
+	if req == nil || req.PluginContext.DataSourceInstanceSettings == nil {
+		res.Status = backend.HealthStatusError
+		res.Message = "Datasource instance settings are unavailable"
+		return res, nil
+	}
+
 	_, err := models.LoadPluginSettings(*req.PluginContext.DataSourceInstanceSettings)
 
 	if err != nil {

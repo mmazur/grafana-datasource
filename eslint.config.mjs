@@ -26,6 +26,7 @@ export default defineConfig([
       '**/artifacts/',
       '**/work/',
       '**/ci/',
+      '**/.var/',
       'test-results/',
       'playwright-report/',
       'blob-report/',

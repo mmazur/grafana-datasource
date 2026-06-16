@@ -1,11 +1,11 @@
 import React, { ChangeEvent } from 'react';
-import { InlineField, Input, SecretInput, Select, TextArea } from '@grafana/ui';
-import { DataSourcePluginOptionsEditorProps, SelectableValue } from '@grafana/data';
+import { Combobox, InlineField, Input, SecretInput, TextArea, type ComboboxOption } from '@grafana/ui';
+import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import { AuthMode, MyDataSourceOptions, MySecureJsonData } from '../types';
 
 interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions, MySecureJsonData> {}
 
-const AUTH_MODES: Array<SelectableValue<AuthMode>> = [
+const AUTH_MODES: Array<ComboboxOption<AuthMode>> = [
   { label: 'None', value: 'none' },
   { label: 'Bearer token', value: 'bearer' },
   { label: 'Shell command', value: 'shellcmd' },
@@ -34,8 +34,8 @@ export function ConfigEditor(props: Props) {
     onJsonChange({ upstreamDatasourceType: event.target.value });
   };
 
-  const onAuthModeChange = (value: SelectableValue<AuthMode>) => {
-    onJsonChange({ authMode: value.value ?? 'none' });
+  const onAuthModeChange = (value: ComboboxOption<AuthMode> | null) => {
+    onJsonChange({ authMode: value?.value ?? 'none' });
   };
 
   const onShellCmdChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -117,12 +117,12 @@ export function ConfigEditor(props: Props) {
       </InlineField>
 
       <InlineField label="Auth mode" labelWidth={LABEL_WIDTH} interactive tooltip={'How to authenticate to the upstream'}>
-        <Select
-          inputId="config-editor-auth-mode"
+        <Combobox
           options={AUTH_MODES}
-          value={authMode}
+          value={AUTH_MODES.find((option) => option.value === authMode) ?? null}
           onChange={onAuthModeChange}
           width={40}
+          isClearable={false}
         />
       </InlineField>
 
