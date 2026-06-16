@@ -1,3 +1,12 @@
 apiVersion: 1
 
-datasources: []
+datasources:
+  # Fake datasource used only by E2E smoke tests. It is not expected to connect to a real upstream Grafana.
+  - name: Fake Grafana Proxy for E2E
+    type: mmazur-grafana-datasource
+    access: proxy
+    jsonData:
+      upstreamUrl: http://fake-upstream.invalid
+      upstreamDatasourceUid: fake-upstream-datasource
+      upstreamDatasourceType: prometheus
+      authMode: none
