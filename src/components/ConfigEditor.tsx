@@ -118,6 +118,7 @@ export function ConfigEditor(props: Props) {
 
       <InlineField label="Auth mode" labelWidth={LABEL_WIDTH} interactive tooltip={'How to authenticate to the upstream'}>
         <Combobox
+          id="config-editor-auth-mode"
           options={AUTH_MODES}
           value={AUTH_MODES.find((option) => option.value === authMode) ?? null}
           onChange={onAuthModeChange}

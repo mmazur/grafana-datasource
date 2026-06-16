@@ -1,5 +1,11 @@
 import { test, expect } from '@grafana/plugin-e2e';
+import type { Page } from '@playwright/test';
 import { MyDataSourceOptions, MySecureJsonData } from '../src/types';
+
+async function selectAuthMode(page: Page, label: string) {
+  await page.getByRole('combobox', { name: 'Auth mode' }).click();
+  await page.getByRole('option', { name: label }).click();
+}
 
 test('smoke: should render config editor', async ({ createDataSourceConfigPage, readProvisionedDataSource, page }) => {
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
@@ -19,8 +25,7 @@ test('selecting "Shell command" auth mode reveals the command fields', async ({
   // Hidden until the shellcmd mode is selected.
   await expect(page.getByRole('textbox', { name: 'Command' })).toBeHidden();
 
-  await page.getByRole('combobox', { name: 'Auth mode' }).click();
-  await page.getByText('Shell command', { exact: true }).click();
+  await selectAuthMode(page, 'Shell command');
 
   await expect(page.getByRole('textbox', { name: 'Command' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Arguments' })).toBeVisible();
@@ -35,8 +40,7 @@ test('selecting "Bearer token" auth mode reveals the secret field', async ({
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
   await createDataSourceConfigPage({ type: ds.type });
 
-  await page.getByRole('combobox', { name: 'Auth mode' }).click();
-  await page.getByText('Bearer token', { exact: true }).click();
+  await selectAuthMode(page, 'Bearer token');
 
   await expect(page.getByRole('textbox', { name: 'Bearer token' })).toBeVisible();
 });
