@@ -3,8 +3,9 @@ import type { Page } from '@playwright/test';
 import { MyDataSourceOptions, MySecureJsonData } from '../src/types';
 
 async function selectAuthMode(page: Page, label: string) {
-  await page.getByRole('combobox', { name: 'Auth mode' }).click();
-  await page.getByRole('option', { name: label }).click();
+  const authMode = page.getByRole('combobox', { name: 'Auth mode' });
+  await authMode.fill(label);
+  await authMode.press('Enter');
 }
 
 test('smoke: should render config editor', async ({ createDataSourceConfigPage, readProvisionedDataSource, page }) => {
