@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -236,6 +237,22 @@ func shellCmdEnv(cmdPath string) []string {
 	if u, err := user.Current(); err == nil {
 		home = u.HomeDir
 	}
+
+	if runtime.GOOS == "windows" {
+		env := os.Environ()
+		if home != "" {
+			env = append(env, "HOME="+home)
+		}
+		cmdDir := filepath.Dir(cmdPath)
+		for i, e := range env {
+			if strings.HasPrefix(strings.ToUpper(e), "PATH=") {
+				env[i] = e + ";" + cmdDir
+				break
+			}
+		}
+		return env
+	}
+
 	path := filepath.Dir(cmdPath) + ":/usr/local/bin:/usr/bin:/bin"
 	env := []string{"PATH=" + path}
 	if home != "" {
@@ -251,7 +268,7 @@ func resolveShellCmd(shellCmd string) (string, error) {
 	if shellCmd == "" {
 		return "", fmt.Errorf("shellcmd mode selected but shellCmd is not configured")
 	}
-	if strings.ContainsRune(shellCmd, os.PathSeparator) {
+	if strings.ContainsRune(shellCmd, os.PathSeparator) || (runtime.GOOS == "windows" && strings.ContainsRune(shellCmd, '/')) {
 		if _, err := os.Stat(shellCmd); err != nil {
 			return "", fmt.Errorf("configured shellCmd %q not usable: %v", shellCmd, err)
 		}
@@ -259,6 +276,24 @@ func resolveShellCmd(shellCmd string) (string, error) {
 	}
 	if p, err := exec.LookPath(shellCmd); err == nil {
 		return p, nil
+	}
+	if runtime.GOOS == "windows" {
+		sysPath := os.Getenv("PATH")
+		if sysPath == "" {
+			sysPath = os.Getenv("Path")
+		}
+		for _, dir := range strings.Split(sysPath, ";") {
+			dir = strings.TrimSpace(dir)
+			if dir == "" {
+				continue
+			}
+			for _, ext := range []string{"", ".exe", ".cmd", ".bat"} {
+				candidate := filepath.Join(dir, shellCmd+ext)
+				if _, err := os.Stat(candidate); err == nil {
+					return candidate, nil
+				}
+			}
+		}
 	}
 	return "", fmt.Errorf("shellCmd %q not found: use an absolute path (subprocess PATH is empty)", shellCmd)
 }
