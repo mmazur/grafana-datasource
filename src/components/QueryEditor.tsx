@@ -6,6 +6,7 @@ import {
   InlineField,
   Input,
   RadioButtonGroup,
+  Select,
   Stack,
   type ComboboxOption,
   type Monaco,
@@ -425,7 +426,7 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
     return values.map((value) => ({ label: value, value }));
   }, [selectedMetricDefinition]);
 
-  const onSubscriptionChange = (option: ComboboxOption<string> | null) => {
+  const onSubscriptionChange = (option: SelectableValue<string> | null) => {
     updateAzureQuery({
       subscription: option?.value ?? '',
       resourceGroup: '',
@@ -436,7 +437,7 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
     });
   };
 
-  const onResourceGroupChange = (option: ComboboxOption<string> | null) => {
+  const onResourceGroupChange = (option: SelectableValue<string> | null) => {
     updateAzureQuery({
       resourceGroup: option?.value ?? '',
       metricNamespace: '',
@@ -446,7 +447,7 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
     });
   };
 
-  const onResourceChange = (option: ComboboxOption<string> | null) => {
+  const onResourceChange = (option: SelectableValue<string> | null) => {
     const resource = resources.find((item) => item.id === option?.value);
     const parsed = resource ? parseAzureResourceId(resource.id) : null;
 
@@ -459,11 +460,12 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
     });
   };
 
-  const onMetricChange = (option: ComboboxOption<string> | null) => {
+  const onMetricChange = (option: SelectableValue<string> | null) => {
     const metric = metricDefinitions.find((item) => item.name?.value === option?.value);
     updateAzureQuery({
       metricName: option?.value ?? '',
       aggregation: metric?.primaryAggregationType ?? metric?.supportedAggregationTypes?.[0] ?? '',
+      timeGrain: metric?.metricAvailabilities?.[0]?.timeGrain ?? timeGrain,
     });
   };
 
@@ -478,7 +480,7 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
     <Stack direction="column" gap={1}>
       {error && <div>Failed to load subscriptions: {error}</div>}
       <InlineField label="Subscription" labelWidth={18} grow>
-        <Combobox
+        <Select
           value={subscriptionOptions.find((option) => option.value === subscription) ?? null}
           options={subscriptionOptions}
           onChange={onSubscriptionChange}
@@ -487,7 +489,7 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
         />
       </InlineField>
       <InlineField label="Resource group" labelWidth={18} grow>
-        <Combobox
+        <Select
           value={resourceGroupOptions.find((option) => option.value === resourceGroup) ?? null}
           options={resourceGroupOptions}
           onChange={onResourceGroupChange}
@@ -497,7 +499,7 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
         />
       </InlineField>
       <InlineField label="Resource" labelWidth={18} grow>
-        <Combobox
+        <Select
           value={selectedResourceItem ? { label: `${selectedResourceItem.name} (${selectedResourceItem.type})`, value: selectedResourceItem.id } : null}
           options={resourceOptions}
           onChange={onResourceChange}
@@ -513,8 +515,8 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
         <Input value={selectedResourceItem?.location ?? ''} readOnly />
       </InlineField>
       <InlineField label="Metric" labelWidth={18} grow>
-        <Combobox
-          value={metricOptions.find((option) => option.value === metricName) ?? { label: metricName, value: metricName }}
+        <Select
+          value={metricOptions.find((option) => option.value === metricName) ?? (metricName ? { label: metricName, value: metricName } : null)}
           options={metricOptions}
           onChange={onMetricChange}
           loading={metricsLoading}
@@ -523,8 +525,8 @@ function AzureMonitorQueryEditor({ query, onChange, onRunQuery, datasource }: Pr
         />
       </InlineField>
       <InlineField label="Aggregation" labelWidth={18} grow>
-        <Combobox
-          value={aggregationOptions.find((option) => option.value === aggregation) ?? { label: aggregation, value: aggregation }}
+        <Select
+          value={aggregationOptions.find((option) => option.value === aggregation) ?? (aggregation ? { label: aggregation, value: aggregation } : null)}
           options={aggregationOptions}
           onChange={(option) => updateAzureQuery({ aggregation: option?.value ?? '' })}
           disabled={!metricName}

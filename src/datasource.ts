@@ -6,6 +6,7 @@ import { MyQuery, MyDataSourceOptions, DEFAULT_QUERY } from './types';
 
 const MAX_METRIC_PICKER_OPTIONS = 200;
 const AZURE_MONITOR_TYPE = 'grafana-azure-monitor-datasource';
+const AZURE_MONITOR_PROXY_TYPE = 'grafana-azure-monitor-datasource-proxy';
 const PROMETHEUS_TYPE = 'prometheus';
 const PLUGIN_DATASOURCE_TYPE = 'mmazur-grafana-datasource';
 const DEFAULT_AZURE_TIME_GRAIN = 'PT30M';
@@ -83,6 +84,7 @@ export class DataSource extends DataSourceWithBackend<MyQuery, MyDataSourceOptio
   isAzureMonitor(): boolean {
     return (
       this.upstreamDatasourceType === AZURE_MONITOR_TYPE ||
+      this.upstreamDatasourceType === AZURE_MONITOR_PROXY_TYPE ||
       this.upstreamDatasourceUid === 'azure-monitor-oob' ||
       this.instanceName.endsWith('-azure-monitor')
     );

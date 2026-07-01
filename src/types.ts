@@ -58,7 +58,9 @@ export interface MyDataSourceOptions extends DataSourceJsonData {
   upstreamUrl?: string;
   // UID of the single upstream datasource this instance forwards queries to.
   upstreamDatasourceUid?: string;
-  // Type of the upstream datasource (e.g. "prometheus").
+  // Type of the upstream datasource (e.g. "prometheus"). Use
+  // "grafana-azure-monitor-datasource-proxy" to execute Azure Monitor metrics
+  // through the upstream resource API instead of /api/ds/query.
   upstreamDatasourceType?: string;
   // How we authenticate to the upstream.
   authMode?: AuthMode;

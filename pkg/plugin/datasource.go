@@ -23,6 +23,8 @@ var (
 	_ instancemgmt.InstanceDisposer = (*Datasource)(nil)
 )
 
+const azureMonitorProxyDatasourceType = "grafana-azure-monitor-datasource-proxy"
+
 // NewDatasource creates a new datasource instance.
 func NewDatasource(_ context.Context, _ backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	return &Datasource{}, nil
@@ -56,6 +58,9 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 	cfg, err := models.LoadPluginSettings(*req.PluginContext.DataSourceInstanceSettings)
 	if err != nil {
 		return nil, fmt.Errorf("load settings: %w", err)
+	}
+	if cfg.UpstreamDatasourceType == azureMonitorProxyDatasourceType {
+		return d.queryAzureMonitorViaProxy(ctx, cfg, req.Queries)
 	}
 	return d.queryUpstream(ctx, cfg, req.Queries)
 }
