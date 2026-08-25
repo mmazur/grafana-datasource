@@ -10,7 +10,7 @@ updates:
       # Exclude plugin-e2e to prevent false positives with canary e2e tests
       exclude:
         - '@grafana/plugin-e2e'
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0 # DISABLED
     commit-message:
       prefix: 'chore'
       include: 'scope'
@@ -49,13 +49,13 @@ updates:
       interval: 'weekly'
     commit-message:
       prefix: 'chore(ci)'
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0 # DISABLED
 
   - package-ecosystem: 'gomod'
     directory: '/'
     schedule:
       interval: 'weekly'
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0 # DISABLED
     allow:
       - dependency-name: 'github.com/grafana/grafana-plugin-sdk-go'
         dependency-type: 'all'
