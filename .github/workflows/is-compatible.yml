@@ -1,5 +1,8 @@
 name: Latest Grafana API compatibility check
-on: [pull_request]
+on:
+  workflow_dispatch:
+  # DISABLED: automatic trigger commented out
+  # pull_request: {}
 
 jobs:
   compatibilitycheck:
